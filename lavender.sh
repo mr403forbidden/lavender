@@ -112,9 +112,9 @@ TOOLCHAIN=$(cat out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '
 UTS=$(cat out/include/generated/compile.h | grep UTS_VERSION | cut -d '"' -f2)
 KERNEL=$(cat out/.config | grep Linux/arm64 | cut -d " " -f3)
 
-tg_sendstick
+sendStick
 
-tg_channelcast "<b>New Nightly HeartAttack build is available!</b>" \
+sendInfo "<b>New Nightly HeartAttack build is available!</b>" \
     "<b>Device :</b> <code>REDMI NOTE 7</code>" \
     "<b>Kernel version :</b> <code>Linux ${KERNEL}</code>" \
     "<b>UTS version :</b> <code>${UTS}</code>" \
