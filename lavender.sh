@@ -45,7 +45,7 @@ function sendLog() {
 
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
+KERNEL_DIR=$PWD
 KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
 ZIP_DIR=$KERNEL_DIR/AnyKernel2
 CONFIG_MIUI=lavender-miui_defconfig
@@ -55,6 +55,7 @@ PATH="${KERNEL_DIR}/clang/bin:${KERNEL_DIR}/stock/bin:${PATH}:${KERNEL_DIR}/stoc
 # Export
 export ARCH=arm64
 export KBUILD_BUILD_USER="root"
+export KBUILD_BUILD_HOST="Anonymous"
 export TZ=":Asia/Jakarta"
 
 # Clone AnyKernel2
