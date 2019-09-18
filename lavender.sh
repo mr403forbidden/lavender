@@ -43,54 +43,65 @@ function sendLog() {
 #             #
 ###############
 
-# Location of Toolchain
-KERNELDIR=$PWD
-TOOLDIR=$KERNELDIR/.ToolBuild
-ZIP_DIR="${TOOLDIR}/AnyKernel3"
-OUTDIR="${KERNELDIR}/.Output"
-IMAGE="${OUTDIR}/arch/arm64/boot/Image.gz-dtb"
-BUILDLOG="${OUTDIR}/build-${CODENAME}-${DEVICES}.log"
+# Main environtment
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+KERNEL_DIR=/home/runner/work/android_kernel_xiaomi_lavender/android_kernel_xiaomi_lavender/
+KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
+ZIP_DIR=$KERNEL_DIR/AnyKernel2
+CONFIG_MIUI=lavender-miui_defconfig
+CONFIG_AOSP=lavender-aosp_defconfig
+PATH="${KERNEL_DIR}/clang/bin:${KERNEL_DIR}/stock/bin:${PATH}:${KERNEL_DIR}/stock_32/bin:${PATH}"
 
-# Download tool
-git clone https://github.com/aln-project/AnyKernel3 -b "${DEVICES}-${TARGET_ROM}" ${ZIP_DIR}
+# Export
+export ARCH=arm64
+export KBUILD_BUILD_USER="root"
+export KBUILD_BUILD_USER="Anonymous"
+export TZ=":Asia/Jakarta"
 
-if [ $COMPILER -eq 0 ]; then
-    TOOLCHAIN32="${TOOLDIR}/stock32"
-    TOOLCHAIN64="${TOOLDIR}/stock64"
-    CC="aarch64-linux-android-"
-    CC_ARM32="arm-linux-androideabi-"
-    git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r39 --depth=1 "${TOOLCHAIN32}"
-    git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r39 --depth=1 "${TOOLCHAIN64}"
-elif [ $COMPILER -eq 1 ]; then
-    if [[ ! -d ${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabi && ! -d ${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu ]]; then
-        mkdir ${TOOLDIR}
-        cd ${TOOLDIR}
-        curl -O https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabi.tar.xz
-        tar xvf *.tar.xz
-        rm *.tar.xz
-        curl -O https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz
-        tar xvf *.tar.xz
-        rm *.tar.xz
-        cd ${KERNELDIR}
-    fi
-    TOOLCHAIN32="${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabi"
-    TOOLCHAIN64="${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu"
-    CC="aarch64-linux-gnu-"
-    CC_ARM32="arm-linux-gnueabi-"
-fi
+# Clone AnyKernel2
+git clone https://github.com/rama982/AnyKernel2 -b lavender-miui
 
-if [ $USECLANG -eq 1 ]; then
-    git clone --depth=1 https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-5696680 "${TOOLDIR}/clang"
-elif [ $USECLANG -eq 2 ]; then
-    git clone --depth=1 https://github.com/NusantaraDevs/DragonTC "${TOOLDIR}/clang"
-fi
-
-CLANG_VERSION=$("${TOOLDIR}/clang/bin/clang" --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+# Build start
+make  O=out $CONFIG_MIUI $THREAD
+make -j$(nproc --all) O=out \
+                      ARCH=arm64 \
+                      CC=clang \
+                      CLANG_TRIPLE=aarch64-linux-gnu- \
+                      CROSS_COMPILE=aarch64-linux-android- \
+                      CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 if ! [ -a $KERN_IMG ]; then
-    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    tg_channelcast "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
     exit 1
 fi
+
+cd $ZIP_DIR
+make clean &>/dev/null
+cd ..
+
+# For MIUI Build
+# Credit @adekmaulana
+OUTDIR="$KERNEL_DIR/out/"
+VENDOR_MODULEDIR="$KERNEL_DIR/AnyKernel2/modules/vendor/lib/modules"
+STRIP="$KERNEL_DIR/stock/bin/$(echo "$(find "$KERNEL_DIR/stock/bin" -type f -name "aarch64-*-gcc")" | awk -F '/' '{print $NF}' |\
+            sed -e 's/gcc/strip/')"
+
+for MODULES in $(find "${OUTDIR}" -name '*.ko'); do
+    "${STRIP}" --strip-unneeded --strip-debug "${MODULES}" &> /dev/null
+    "${OUTDIR}"/scripts/sign-file sha512 \
+            "${OUTDIR}/certs/signing_key.pem" \
+            "${OUTDIR}/certs/signing_key.x509" \
+            "${MODULES}"
+    find "${OUTDIR}" -name '*.ko' -exec cp {} "${VENDOR_MODULEDIR}" \;
+    case ${MODULES} in
+            */wlan.ko)
+        cp "${MODULES}" "${VENDOR_MODULEDIR}/qca_cld3_wlan.ko" ;;
+    esac
+done
+
+echo -e "\n(i) Done moving modules"
+rm "${VENDOR_MODULEDIR}/wlan.ko"
+
 
 cd $ZIP_DIR
 make clean &>/dev/null
