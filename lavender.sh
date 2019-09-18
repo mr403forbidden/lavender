@@ -45,7 +45,7 @@ function sendLog() {
 
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-KERNEL_DIR=/home/runner/work/android_kernel_xiaomi_lavender/android_kernel_xiaomi_lavender/
+KERNEL_DIR=/root/android_kernel_xiaomi_lavender-201907011/
 KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
 ZIP_DIR=$KERNEL_DIR/AnyKernel2
 CONFIG_MIUI=lavender-miui_defconfig
@@ -54,8 +54,7 @@ PATH="${KERNEL_DIR}/clang/bin:${KERNEL_DIR}/stock/bin:${PATH}:${KERNEL_DIR}/stoc
 
 # Export
 export ARCH=arm64
-export KBUILD_BUILD_USER="root"
-export KBUILD_BUILD_USER="Anonymous"
+export KBUILD_BUILD_USER="ramakun"
 export TZ=":Asia/Jakarta"
 
 # Clone AnyKernel2
@@ -71,7 +70,7 @@ make -j$(nproc --all) O=out \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 if ! [ -a $KERN_IMG ]; then
-    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    tg_channelcast "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
     exit 1
 fi
 
@@ -101,36 +100,6 @@ done
 
 echo -e "\n(i) Done moving modules"
 rm "${VENDOR_MODULEDIR}/wlan.ko"
-
-
-cd $ZIP_DIR
-make clean &>/dev/null
-cd ..
-
-# For MIUI Build
-# Credit @adekmaulana
-MODULEDIR="${ZIP_DIR}/modules/vendor/lib/modules/"
-PRONTO="${MODULEDIR}pronto/pronto_wlan.ko"
-STRIP="${TOOLCHAIN64}/bin/$(echo "$(find "${TOOLCHAIN64}/bin" -type f -name "aarch64-*-gcc")" | awk -F '/' '{print $NF}' |\
-			sed -e 's/gcc/strip/')"
-
-function strip_module () {
-	# thanks to @adekmaulana
-	for MOD in $(find "${OUTDIR}" -name '*.ko') ; do
-		"${STRIP}" --strip-unneeded --strip-debug "${MOD}" #&>/dev/null
-		"${KERNELDIR}/"/scripts/sign-file sha512 \
-				"${OUTDIR}/signing_key.priv" \
-				"${OUTDIR}/signing_key.x509" \
-				"${MOD}"
-		find "${OUTDIR}" -name '*.ko' -exec cp {} "${MODULEDIR}" \;
-		case ${MOD} in
-			*/wlan.ko)
-				cp -ar "${MOD}" "${PRONTO}"
-		esac
-	done
-	echo -e "\n(i) Done moving modules"
-}
-
 
 cd $ZIP_DIR
 cp $KERN_IMG $ZIP_DIR/zImage
