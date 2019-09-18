@@ -70,7 +70,7 @@ make -j$(nproc --all) O=out \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 if ! [ -a $KERN_IMG ]; then
-    tg_channelcast "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
     exit 1
 fi
 
@@ -133,7 +133,7 @@ make -j$(nproc --all) O=out \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 if ! [ -a $KERN_IMG ]; then
-    tg_channelcast "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
     exit 1
 fi
 
