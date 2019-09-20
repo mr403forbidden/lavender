@@ -45,7 +45,7 @@ function sendLog() {
 
 # Default Settings
 CODENAME="MIUI"
-CODENAME="AOSP-BASE"
+CODENAME2="AOSP-BASE"
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
