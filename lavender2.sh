@@ -45,14 +45,12 @@ function sendLog() {
 
 # Default Settings
 CODENAME="MIUI"
-CODENAME2="AOSP-BASE"
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
 KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
 ZIP_DIR=$KERNEL_DIR/AnyKernel3
 CONFIG_MIUI=lavender-miui_defconfig
-CONFIG_AOSP=lavender-aosp_defconfig
 PATH="${KERNEL_DIR}/android_prebuilts_clang_host_linux-x86_clang-5696680/bin:${KERNEL_DIR}/aarch64-linux-android-4.9/bin:${PATH}:${KERNEL_DIR}/arm-linux-androideabi-4.9/bin:${PATH}"
 
 # Export
