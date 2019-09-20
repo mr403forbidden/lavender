@@ -27,7 +27,7 @@ function sendInfo() {
  
 function sendZip() {
 	JIP="AnyKernel3/${FILENAME}"
-	curl -F chat_id="$CHAT_ID" -F document=@"JIP" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
+	curl -F chat_id="$CHAT_ID" -F document=@"$JIP" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
 }
  
 function sendStick() {
