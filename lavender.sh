@@ -45,20 +45,21 @@ function sendLog() {
 
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-KERNEL_DIR=/root/android_kernel_xiaomi_lavender-201907011/
+KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
 KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
-ZIP_DIR=$KERNEL_DIR/AnyKernel2
+ZIP_DIR=$KERNEL_DIR/AnyKernel3
 CONFIG_MIUI=lavender-miui_defconfig
 CONFIG_AOSP=lavender-aosp_defconfig
 PATH="${KERNEL_DIR}/clang/bin:${KERNEL_DIR}/stock/bin:${PATH}:${KERNEL_DIR}/stock_32/bin:${PATH}"
 
 # Export
 export ARCH=arm64
-export KBUILD_BUILD_USER="ramakun"
+export KBUILD_BUILD_USER="root"
+export KBUILD_BUILD_HOST="Anonymous"
 export TZ=":Asia/Jakarta"
 
-# Clone AnyKernel2
-git clone https://github.com/rama982/AnyKernel2 -b lavender-miui
+# Clone AnyKernel3
+git clone https://github.com/rama982/AnyKernel3 -b lavender-miui
 
 # Build start
 make  O=out $CONFIG_MIUI $THREAD
@@ -81,7 +82,7 @@ cd ..
 # For MIUI Build
 # Credit @adekmaulana
 OUTDIR="$KERNEL_DIR/out/"
-VENDOR_MODULEDIR="$KERNEL_DIR/AnyKernel2/modules/vendor/lib/modules"
+VENDOR_MODULEDIR="$KERNEL_DIR/AnyKernel3/modules/vendor/lib/modules"
 STRIP="$KERNEL_DIR/stock/bin/$(echo "$(find "$KERNEL_DIR/stock/bin" -type f -name "aarch64-*-gcc")" | awk -F '/' '{print $NF}' |\
             sed -e 's/gcc/strip/')"
 
