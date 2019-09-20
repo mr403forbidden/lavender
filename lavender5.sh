@@ -20,7 +20,7 @@ DEVELOPER="root"
 HOST="Anonymous"
 
 # JOBS
-JOBS="-j$(($(nproc --all) + 4))"
+JOBS="-j$(nproc --all)"
 
 # Location of Toolchain
 KERNELDIR=$PWD
