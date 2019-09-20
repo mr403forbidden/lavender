@@ -125,6 +125,8 @@ UTS=$(cat out/include/generated/compile.h | grep UTS_VERSION | cut -d '"' -f2)
 KERNEL=$(cat out/.config | grep Linux/arm64 | cut -d " " -f3)
 PC=$(uname -a)
 OS=$(cat /etc/*release)
+BUILD_END=$(date +"%s")
+DIFF=$(($BUILD_END - $BUILD_START))
 
 sendStick
 
@@ -143,33 +145,3 @@ sendLog
 sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
 sendStick "${BUILD_SUCCESS}"
 
-# Build AOSP start
-make  O=out $CONFIG_AOSP $THREAD
-make -j$(nproc --all) O=out \
-                      ARCH=arm64 \
-                      CC=clang \
-                      CLANG_TRIPLE=aarch64-linux-gnu- \
-                      CROSS_COMPILE=aarch64-linux-android- \
-                      CROSS_COMPILE_ARM32=arm-linux-androideabi-
-
-if ! [ -a $KERN_IMG ]; then
-    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
-    exit 1
-fi
-
-cd $ZIP_DIR
-git checkout lavender-aosp
-make clean &>/dev/null
-cp $KERN_IMG $ZIP_DIR/zImage
-make normal &>/dev/null
-echo "Flashable zip generated under $ZIP_DIR."
-FILENAME=$(echo HeartAttack*.zip)
-cd ..
-
-sendInfo "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME2} ONLY!!!")" 
-sendZip
-sendLog
-sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
-sendStick "${BUILD_SUCCESS}"
-
-# Build end
