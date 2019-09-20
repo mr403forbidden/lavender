@@ -125,7 +125,7 @@ function strip_module () {
 }
 
 # Export
-PATH="${$KERNELDIR}/android_prebuilts_clang_host_linux-x86_clang-5696680/bin:${KERNEL_DIR}/aarch64-linux-android-4.9/bin:${PATH}:${KERNEL_DIR}/arm-linux-androideabi-4.9/bin:${PATH}"
+PATH="${KERNELDIR}/android_prebuilts_clang_host_linux-x86_clang-5696680/bin:${KERNELDIR}/aarch64-linux-android-4.9/bin:${PATH}:${KERNELDIR}/arm-linux-androideabi-4.9/bin:${PATH}"
 
 BUILD_START=$(date +"%s")
 DATE=`date`
