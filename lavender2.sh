@@ -15,7 +15,6 @@ TELEGRAM_TOKEN=$(openssl enc -base64 -d <<< ODg4MDY2NDQ4OkFBRks2STZWSnVfdFpNNTFj
 CHAT_ID=$(openssl enc -base64 -d <<< NzA0MTI0OTU5)
 export BUILD_FAIL="CAADBQAD5xsAAsZRxhW0VwABTkXZ3wcC"
 export BUILD_SUCCESS="CAADBQADeQAD9kkAARtA3tu3hLOXJwI"
-TELEGRAM=telegram/telegram
 
 # Push kernel installer to channel
 function push() {
@@ -26,12 +25,12 @@ function push() {
 
 # Send the info up
 function tg_channelcast() {
-    "${TELEGRAM}" -c ${CHAT_ID} -H \
-        "$(
+    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d chat_id=$CHAT_ID -d "parse_mode=HTML" -d text="$(
             for POST in "${@}"; do
                 echo "${POST}"
             done
-        )"
+        )" 
+&>/dev/null
 }
 
 function tg_sendstick() {
