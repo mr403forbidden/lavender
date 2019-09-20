@@ -49,10 +49,6 @@ elif [ $RELEASE_STATUS -eq 0 ]; then
 	ZIP_NAME="${KERNEL_NAME}-${CODENAME}-${DEVICES}-$(git log --pretty=format:'%h' -1)-$(date "+%H%M").zip"
 fi
 
-if [ ! -d "${BUILDLOG}" ]; then
- 	rm -rf "${BUILDLOG}"
-fi
-
 ####
 
 function make_zip () {
@@ -100,7 +96,7 @@ export KBUILD_BUILD_HOST="Anonymous"
 export TZ=":Asia/Jakarta"
 
 # Clone AnyKernel3
-git clone https://github.com/rama982/AnyKernel3 -b lavender "${DEVICES}-${TARGET_ROM}" ${ZIP_DIR}
+git clone https://github.com/aln-project/AnyKernel3 -b "${DEVICES}-${TARGET_ROM}" ${ZIP_DIR}
 
 # Clone Compiler
 git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r39 --depth=1
