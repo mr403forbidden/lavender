@@ -80,6 +80,10 @@ function make_zip () {
 # Default Settings
 CODENAME="MIUI"
 KERNEL_NAME="HeartAttack"
+KERNEL_VERSION=""
+DEVICES="lavender"
+TARGET_ROM="miui"
+TARGET_ARCH=arm64
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
