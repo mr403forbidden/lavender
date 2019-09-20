@@ -9,7 +9,6 @@
 #   TELEGRAM   #
 #              #
 ################
-
 # Telegram Function
 BOT_API_KEY=$(openssl enc -base64 -d <<< ODg4MDY2NDQ4OkFBRks2STZWSnVfdFpNNTFjNzFNOFhMdW1sdXFyZ1UxbFpF)
 CHAT_ID=$(openssl enc -base64 -d <<< NzA0MTI0OTU5)
@@ -26,8 +25,7 @@ function sendInfo() {
 }
  
 function sendZip() {
-	JIP="AnyKernel3/${FILENAME}"
-	curl -F chat_id="$CHAT_ID" -F document=@"$JIP" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
+	curl -F chat_id="$CHAT_ID" -F document=@"$ZIP_DIR/$ZIP_NAME" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
 }
  
 function sendStick() {
@@ -36,6 +34,41 @@ function sendStick() {
  
 function sendLog() {
 	curl -F chat_id="704124959" -F document=@"$BUILDLOG" https://api.telegram.org/bot$BOT_API_KEY/sendDocument &>/dev/null
+}
+#####
+
+if [ $RELEASE_STATUS -eq 1 ]; then
+	if [ "${CODENAME}" ]; then
+		KVERSION="${CODENAME}-${KERNEL_VERSION}"
+	else
+		KVERSION="${CODENAME}"
+	fi
+	ZIP_NAME="${KERNEL_NAME}-${KVERSION}-${DEVICES}-$(date "+%H%M-%d%m%Y").zip"
+elif [ $RELEASE_STATUS -eq 0 ]; then
+	KVERSION="${CODENAME}-$(git log --pretty=format:'%h' -1)-$(date "+%H%M")"
+	ZIP_NAME="${KERNEL_NAME}-${CODENAME}-${DEVICES}-$(git log --pretty=format:'%h' -1)-$(date "+%H%M").zip"
+fi
+
+if [ ! -d "${BUILDLOG}" ]; then
+ 	rm -rf "${BUILDLOG}"
+fi
+
+####
+
+function make_zip () {
+	cd ${ZIP_DIR}/
+	make clean &>/dev/null
+	if [ ! -f ${KERN_IMG} ]; then
+        	echo -e "Build failed :P";
+        	sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")";
+	        sendInfo "$(echo -e "Kernel compilation failed")";
+			sendStick "${BUILD_FAIL}"
+			sendLog
+        	exit 1;
+	fi
+	echo "**** Copying zImage ****"
+	cp ${KERN_IMG} ${ZIP_DIR}/zImage
+	make ZIP="${ZIP_NAME}" normal &>/dev/null
 }
 
 ###############
@@ -46,6 +79,7 @@ function sendLog() {
 
 # Default Settings
 CODENAME="MIUI"
+KERNEL_NAME="HeartAttack"
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
@@ -95,7 +129,7 @@ OUTDIR="$KERNEL_DIR/out/"
 VENDOR_MODULEDIR="$KERNEL_DIR/AnyKernel3/modules/vendor/lib/modules"
 STRIP="$KERNEL_DIR/aarch64-linux-android-4.9/bin$(echo "$(find "$KERNEL_DIR/aarch64-linux-android-4.9/bin" -type f -name "aarch64-*-gcc")" | awk -F '/' '{print $NF}' |\
             sed -e 's/gcc/strip/')"
-
+function strip_module () {
 for MODULES in $(find "${OUTDIR}" -name '*.ko'); do
     "${STRIP}" --strip-unneeded --strip-debug "${MODULES}" &> /dev/null
     "${OUTDIR}"/scripts/sign-file sha512 \
@@ -108,16 +142,13 @@ for MODULES in $(find "${OUTDIR}" -name '*.ko'); do
         cp "${MODULES}" "${VENDOR_MODULEDIR}/qca_cld3_wlan.ko" ;;
     esac
 done
-
 echo -e "\n(i) Done moving modules"
+}
+
 rm "${VENDOR_MODULEDIR}/wlan.ko"
 
-cd $ZIP_DIR
-cp $KERN_IMG $ZIP_DIR/zImage
-make normal &>/dev/null
-echo "Flashable zip generated under $ZIP_DIR."
-FILENAME=$(echo HeartAttack*.zip)
-cd ..
+BUILD_START=$(date +"%s")
+DATE=`date`
 
 TOOLCHAIN=$(cat out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 UTS=$(cat out/include/generated/compile.h | grep UTS_VERSION | cut -d '"' -f2)
@@ -135,7 +166,18 @@ sendInfo "<b>New Nightly HeartAttack build is available!</b>" \
     "<b>UTS version :</b> <code>${UTS}</code>" \
     "<b>Toolchain :</b> <code>${TOOLCHAIN}</code>" \
     "<b>Latest commit :</b> <code>$(git log --pretty=format:'"%h : %s"' -1)</code>"
-	
+    
+BUILD_END=$(date +"%s")
+DIFF=$(($BUILD_END - $BUILD_START))
+
+cd ${ZIP_DIR}/
+make clean &>/dev/null
+strip_module
+
+make_zip	
+# sendInfo "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME} ONLY!!!")" 
 sendZip
 sendLog
+sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
+sendStick "${BUILD_SUCCESS}"
 
