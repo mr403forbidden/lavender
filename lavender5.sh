@@ -19,6 +19,7 @@ TARGET_ARCH=arm64
 DEVELOPER="root"
 HOST="Anonymous"
 
+# JOBS
 JOBS="-j$(($(nproc --all) + 4))"
 
 # Location of Toolchain
