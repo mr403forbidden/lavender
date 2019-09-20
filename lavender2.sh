@@ -44,7 +44,6 @@ function sendLog() {
 ###############
 
 # Main environtment
-PC=$uname -a
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
 KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
@@ -121,6 +120,8 @@ cd ..
 TOOLCHAIN=$(cat out/include/generated/compile.h | grep LINUX_COMPILER | cut -d '"' -f2)
 UTS=$(cat out/include/generated/compile.h | grep UTS_VERSION | cut -d '"' -f2)
 KERNEL=$(cat out/.config | grep Linux/arm64 | cut -d " " -f3)
+PC=$(uname -a)
+OS=$(cat /etc/*release)
 
 sendStick
 
@@ -128,7 +129,7 @@ sendInfo "<b>New Nightly HeartAttack build is available!</b>" \
     "<b>Device :</b> <code>REDMI NOTE 7</code>" \
     "<b>PC Pengembang :</b> <code>${PC}</code>" \
     "<b>Kernel version :</b> <code>Linux ${KERNEL}</code>" \
-    "<b>OS :</b> <code>${/etc/*release}</code>" \
+    "<b>OS :</b> <code>${OS}</code>" \
     "<b>UTS version :</b> <code>${UTS}</code>" \
     "<b>Toolchain :</b> <code>${TOOLCHAIN}</code>" \
     "<b>Latest commit :</b> <code>$(git log --pretty=format:'"%h : %s"' -1)</code>"
