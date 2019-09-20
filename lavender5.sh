@@ -16,11 +16,8 @@ CONFIG_FILE="lavender-miui_defconfig"
 DEVICES="lavender"
 TARGET_ROM="miui"
 TARGET_ARCH=arm64
-DEVELOPER="root"
-HOST="Anonymous"
-
-# JOBS
-JOBS="-j$(nproc --all)"
+KBUILD_BUILD_USER=="root"
+KBUILD_BUILD_HOST="Anonymous"
 
 # Location of Toolchain
 KERNELDIR=$PWD
@@ -96,12 +93,6 @@ function make_zip () {
 	make ZIP="${ZIP_NAME}" normal &>/dev/null
 }
 
-function clean_outdir() {
-    make ARCH=$TARGET_ARCH O=${OUTDIR} clean
-    make mrproper
-    rm -rf ${OUTDIR}/*
-}
-
 MODULEDIR="${ZIP_DIR}/modules/vendor/lib/modules/"
 PRONTO="${MODULEDIR}pronto/pronto_wlan.ko"
 STRIP="${KERNELDIR}/aarch64-linux-android-4.9/bin$(echo "$(find "${KERNELDIR}/aarch64-linux-android-4.9/bin" -type f -name "aarch64-*-gcc")" | awk -F '/' '{print $NF}' |\
@@ -139,25 +130,28 @@ sendInfo "<b>- HeartAttack New Kernel -</b>" \
     "<b>Toolchain :</b> <code>${TOOLCHAIN}</code>" \
     "<b>Started at</b> <code>$DATE</code>"
 
-clean_outdir
+# Build start
+make  O=out $CONFIG_FILE $THREAD
+make -j$(nproc --all) O=out \
+                      ARCH=arm64 \
+                      CC=clang \
+                      CLANG_TRIPLE=aarch64-linux-gnu- \
+                      CROSS_COMPILE=aarch64-linux-android- \
+                      CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+		      LOCALVERSION="-${KVERSION}" \
 
-    make ARCH=arm64 O="${OUTDIR}" "${CONFIG_FILE}"
-    make -j$(nproc --all) O="${OUTDIR}" \
-                          ARCH=arm64 \
-                          CC=clang \
-                          CLANG_TRIPLE=aarch64-linux-gnu- \
-                          CROSS_COMPILE=aarch64-linux-android- \
-                          CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-                          LOCALVERSION="-${KVERSION}" \
-                          KBUILD_BUILD_USER="${DEVELOPER}" \
-                          KBUILD_BUILD_HOST="${HOST}"
+if ! [ -a $IMAGE ]; then
+    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    exit 1
+fi
+
+cd $ZIP_DIR
+make clean &>/dev/null
+cd ..
+strip_module
 
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
-
-cd ${ZIP_DIR}/
-make clean &>/dev/null
-strip_module
 
 make_zip
 # sendInfo "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME} ONLY!!!")" 
