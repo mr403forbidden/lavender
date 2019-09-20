@@ -59,7 +59,7 @@ export KBUILD_BUILD_HOST="Anonymous"
 export TZ=":Asia/Jakarta"
 
 # Clone AnyKernel3
-git clone https://github.com/rama982/AnyKernel3 -b lavender-miui
+git clone https://github.com/rama982/AnyKernel3 -b lavender
 
 # Build start
 make  O=out $CONFIG_MIUI $THREAD
@@ -71,7 +71,7 @@ make -j$(nproc --all) O=out \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 if ! [ -a $KERN_IMG ]; then
-    tg_channelcast "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
     exit 1
 fi
 
