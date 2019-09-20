@@ -11,30 +11,35 @@
 ################
 
 # Telegram Function
-BOT_API_KEY=$(openssl enc -base64 -d <<< ODg4MDY2NDQ4OkFBRks2STZWSnVfdFpNNTFjNzFNOFhMdW1sdXFyZ1UxbFpF)
+TELEGRAM_TOKEN=$(openssl enc -base64 -d <<< ODg4MDY2NDQ4OkFBRks2STZWSnVfdFpNNTFjNzFNOFhMdW1sdXFyZ1UxbFpF)
 CHAT_ID=$(openssl enc -base64 -d <<< NzA0MTI0OTU5)
 export BUILD_FAIL="CAADBQAD5xsAAsZRxhW0VwABTkXZ3wcC"
 export BUILD_SUCCESS="CAADBQADeQAD9kkAARtA3tu3hLOXJwI"
+TELEGRAM=telegram/telegram
 
-function sendInfo() {
-    curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendMessage -d chat_id=$CHAT_ID -d "parse_mode=HTML" -d text="$(
+# Push kernel installer to channel
+function push() {
+    JIP="AnyKernel3/${FILENAME}"
+	curl -F document=@$JIP  "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument" \
+			-F chat_id="$CHAT_ID"
+}
+
+# Send the info up
+function tg_channelcast() {
+    "${TELEGRAM}" -c ${CHAT_ID} -H \
+        "$(
             for POST in "${@}"; do
                 echo "${POST}"
             done
-        )" 
-&>/dev/null
+        )"
 }
- 
-function sendZip() {
-	curl -F chat_id="$CHAT_ID" -F document=@"$ZIP_DIR/$ZIP_NAME" https://api.telegram.org/bot$BOT_API_KEY/sendDocument
+
+function tg_sendstick() {
+	curl -s -X POST https://api.telegram.org/bot$TELEGRAM_TOKEN/sendSticker -d sticker="${1}" -d chat_id=$CHAT_ID &>/dev/null
 }
- 
-function sendStick() {
-	curl -s -X POST https://api.telegram.org/bot$BOT_API_KEY/sendSticker -d sticker="${1}" -d chat_id=$CHAT_ID &>/dev/null
-}
- 
+
 function sendLog() {
-	curl -F chat_id="704124959" -F document=@"$BUILDLOG" https://api.telegram.org/bot$BOT_API_KEY/sendDocument &>/dev/null
+	curl -F chat_id="704124959" -F document=@"$BUILDLOG" https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument &>/dev/null
 }
 
 ###############
@@ -80,7 +85,7 @@ make -j$(nproc --all) O=out \
                       CROSS_COMPILE_ARM32=arm-linux-androideabi-
 
 if ! [ -a $KERN_IMG ]; then
-    sendInfo "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
+    tg_channelcast "<b>BuildCI report status:</b> There are build running but its error, please fix and remove this message!"
     exit 1
 fi
 
@@ -126,9 +131,9 @@ OS=$(cat /etc/*release)
 BUILD_END=$(date +"%s")
 DIFF=$(($BUILD_END - $BUILD_START))
 
-sendStick
+tg_sendstick
 
-sendInfo "<b>New Nightly HeartAttack build is available!</b>" \
+tg_channelcast "<b>New Nightly HeartAttack build is available!</b>" \
     "<b>Device :</b> <code>REDMI NOTE 7</code>" \
     "<b>PC Pengembang :</b> <code>${PC}</code>" \
     "<b>Kernel version :</b> <code>Linux ${KERNEL}</code>" \
@@ -137,9 +142,9 @@ sendInfo "<b>New Nightly HeartAttack build is available!</b>" \
     "<b>Toolchain :</b> <code>${TOOLCHAIN}</code>" \
     "<b>Latest commit :</b> <code>$(git log --pretty=format:'"%h : %s"' -1)</code>"
 
-sendInfo "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME} ONLY!!!")" 
-sendZip
+tg_channelcast "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME} ONLY!!!")" 
+push
 sendLog
-sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
-sendStick "${BUILD_SUCCESS}"
+tg_channelcast "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
+tg_sendstick "${BUILD_SUCCESS}"
 
