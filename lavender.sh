@@ -48,7 +48,7 @@ function tg_sendstick() {
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/home/android_kernel_xiaomi_lavender/
 KERN_IMG=$KERNEL_DIR/out/arch/arm64/boot/Image.gz-dtb
-ZIP_DIR=$KERNEL_DIR/AnyKernel2
+ZIP_DIR=$KERNEL_DIR/AnyKernel3
 CONFIG_MIUI=lavender-miui_defconfig
 PATH="${KERNEL_DIR}/android_prebuilts_clang_host_linux-x86_clang-5696680/bin:${KERNEL_DIR}/aarch64-linux-android-4.9/bin:${PATH}:${KERNEL_DIR}/arm-linux-androideabi-4.9/bin:${PATH}"
 
@@ -58,8 +58,8 @@ export KBUILD_BUILD_USER="root"
 export KBUILD_BUILD_HOST="Anonymous"
 export TZ=":Asia/Jakarta"
 
-# Clone AnyKernel2
-git clone https://github.com/rama982/AnyKernel2 -b lavender-miui
+# Clone AnyKernel3
+git clone https://github.com/rama982/AnyKernel3 -b lavender
 
 # Clone Telegram
 git clone https://github.com/fabianonline/telegram.sh telegram
