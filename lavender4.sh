@@ -19,9 +19,16 @@ TARGET_ARCH=arm64
 DEVELOPER="root"
 HOST="Anonymous"
 
-
-# JOBS
-JOBS="-j$(nproc --all)"
+# COMPILER
+# 0 = STOCK 4.9
+# 1 = GNU 8.3
+COMPILER=0
+# USECLANG
+# 0
+# 1 = CLANG
+# 2 = DRAGONTC
+USECLANG=1
+JOBS="-j$(($(nproc --all) + 4))"
 
 # Location of Toolchain
 KERNELDIR=$PWD
@@ -33,6 +40,39 @@ BUILDLOG="${OUTDIR}/build-${CODENAME}-${DEVICES}.log"
 
 # Download tool
 git clone https://github.com/aln-project/AnyKernel3 -b "${DEVICES}-${TARGET_ROM}" ${ZIP_DIR}
+
+if [ $COMPILER -eq 0 ]; then
+    TOOLCHAIN32="${TOOLDIR}/stock32"
+    TOOLCHAIN64="${TOOLDIR}/stock64"
+    CC="aarch64-linux-android-"
+    CC_ARM32="arm-linux-androideabi-"
+    git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r39 --depth=1 "${TOOLCHAIN32}"
+    git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9 -b android-9.0.0_r39 --depth=1 "${TOOLCHAIN64}"
+elif [ $COMPILER -eq 1 ]; then
+    if [[ ! -d ${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabi && ! -d ${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu ]]; then
+        mkdir ${TOOLDIR}
+        cd ${TOOLDIR}
+        curl -O https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabi.tar.xz
+        tar xvf *.tar.xz
+        rm *.tar.xz
+        curl -O https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz
+        tar xvf *.tar.xz
+        rm *.tar.xz
+        cd ${KERNELDIR}
+    fi
+    TOOLCHAIN32="${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabi"
+    TOOLCHAIN64="${TOOLDIR}/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu"
+    CC="aarch64-linux-gnu-"
+    CC_ARM32="arm-linux-gnueabi-"
+fi
+
+if [ $USECLANG -eq 1 ]; then
+    git clone --depth=1 https://github.com/crdroidandroid/android_prebuilts_clang_host_linux-x86_clang-5696680 "${TOOLDIR}/clang"
+elif [ $USECLANG -eq 2 ]; then
+    git clone --depth=1 https://github.com/NusantaraDevs/DragonTC "${TOOLDIR}/clang"
+fi
+
+CLANG_VERSION=$("${TOOLDIR}/clang/bin/clang" --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
 
 # Telegram Function
 BOT_API_KEY=$(openssl enc -base64 -d <<< ODg4MDY2NDQ4OkFBRks2STZWSnVfdFpNNTFjNzFNOFhMdW1sdXFyZ1UxbFpF)
