@@ -78,11 +78,12 @@ function make_zip () {
 ###############
 
 # Default Settings
+RELEASE_STATUS=0
 CODENAME="MIUI"
 KERNEL_NAME="HeartAttack"
 KERNEL_VERSION=""
 DEVICES="lavender"
-TARGET_ROM="miui"
+TARGET_ROM="MIUI"
 TARGET_ARCH=arm64
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
@@ -99,7 +100,7 @@ export KBUILD_BUILD_HOST="Anonymous"
 export TZ=":Asia/Jakarta"
 
 # Clone AnyKernel3
-git clone https://github.com/rama982/AnyKernel3 -b lavender
+git clone https://github.com/rama982/AnyKernel3 -b lavender "${DEVICES}-${TARGET_ROM}" ${ZIP_DIR}
 
 # Clone Compiler
 git clone https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9 -b android-9.0.0_r39 --depth=1
@@ -184,4 +185,3 @@ sendZip
 sendLog
 sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
 sendStick "${BUILD_SUCCESS}"
-
