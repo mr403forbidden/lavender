@@ -43,6 +43,9 @@ function sendLog() {
 #             #
 ###############
 
+# Default Settings
+CODENAME="MIUI"
+CODENAME="AOSP-BASE"
 # Main environtment
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 KERNEL_DIR=/root/android_kernel_xiaomi_lavender/
@@ -134,7 +137,11 @@ sendInfo "<b>New Nightly HeartAttack build is available!</b>" \
     "<b>Toolchain :</b> <code>${TOOLCHAIN}</code>" \
     "<b>Latest commit :</b> <code>$(git log --pretty=format:'"%h : %s"' -1)</code>"
 
-push
+sendInfo "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME} ONLY!!!")" 
+sendZip
+sendLog
+sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
+sendStick "${BUILD_SUCCESS}"
 
 # Build AOSP start
 make  O=out $CONFIG_AOSP $THREAD
@@ -159,6 +166,10 @@ echo "Flashable zip generated under $ZIP_DIR."
 FILENAME=$(echo HeartAttack*.zip)
 cd ..
 
-push
+sendInfo "$(echo -e "NOTE!!! INSTALL on ROM ${CODENAME2} ONLY!!!")" 
+sendZip
+sendLog
+sendInfo "$(echo -e "Total time elapsed: $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) seconds.")"
+sendStick "${BUILD_SUCCESS}"
 
 # Build end
